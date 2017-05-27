@@ -89,6 +89,9 @@
             foreach($this->events as $id => $event) {
                 if((new DateTime($event['date']))->modify('+1 day') < new DateTime()) {
                     unset($this->events[$id]);
+                    if($event['file'] !== false) {
+                        @unlink($this->files . $event['file']);
+                    }
                 }
             }
             // Save new events
@@ -148,6 +151,14 @@
             if($administro->hasPermission('admin.event')) {
                 $plugin = $administro->plugins['Events'];
                 $plugin->loadEvents();
+                // Delete file
+                if(isset($plugin->events[$params['event']])) {
+                    $event = $plugin->events[$params['event']];
+                    if($event['file'] !== false) {
+                        @unlink($plugin->files .$event['file']);
+                    }
+                }
+                // Remove event
                 unset($plugin->events[$params['event']]);
                 file_put_contents($plugin->dataFile, Yaml::dump($plugin->events));
                 $administro->redirect('admin/events', 'good/Deleted event!');
