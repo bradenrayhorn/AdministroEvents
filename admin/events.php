@@ -11,7 +11,7 @@
 <div class='spacer'></div>
 <div class='events'>
 <?php
-    echo $administro->plugins['Events']->eventDisplay(false, true);
+    echo $administro->plugins['Events']->eventDisplay(false, true, true);
 ?>
 </div>
 <div class='title sub'>

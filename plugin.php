@@ -23,7 +23,7 @@
             array_push($this->administro->forms, 'addevent', 'deleteevent');
         }
 
-        public function eventDisplay($hideOld = true, $admin = false) {
+        public function eventDisplay($hideOld = true, $admin = false, $showYear = false) {
             $this->loadEvents();
 
             uasort($this->events, function($p1, $p2) {
@@ -45,7 +45,10 @@
                 if($hideOld && new DateTime() > $date) continue;
                 $month = $date->format('F');
                 $day = $date->format('j');
-                $year = $date->format('Y');
+                $year = '';
+                if($showYear) {
+                    $year = ', ' . $date->format('Y');
+                }
                 $name = $event['name'];
                 $link = false;
                 $delLink = '';
@@ -60,9 +63,9 @@
                 }
                 if($link !== false) {
                     $html .= '<div class="event"><a href="' . $link . '"><span class="date">'
-                        . $month . ' ' . $day . ': </span>' . $name . '</a>' . $delLink . '</div>';
+                        . $month . ' ' . $day . $year . ': </span>' . $name . '</a>' . $delLink . '</div>';
                 } else {
-                    $html .= '<div class="event"><span class="date">' . $month . ' ' . $day . ', ' . $year . ': </span>' . $name . $delLink;
+                    $html .= '<div class="event"><span class="date">' . $month . ' ' . $day . $year . ': </span>' . $name . $delLink;
                     $html .= '</div>';
                 }
             }
