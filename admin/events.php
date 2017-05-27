@@ -9,9 +9,11 @@
     Events
 </div>
 <div class='spacer'></div>
+<div class='events'>
 <?php
-    echo $administro->plugins['Events']->eventDisplay(false);
+    echo $administro->plugins['Events']->eventDisplay(false, true);
 ?>
+</div>
 <div class='title sub'>
     Add Event
 </div>
@@ -75,3 +77,12 @@
         <input class="button-primary" type="submit" value="Add Event">
     </form>
 </div>
+<style>
+    .events a {
+        color: black;
+        text-decoration: none;
+    }
+    .events a:hover {
+        text-decoration: underline;
+    }
+</style>

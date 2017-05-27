@@ -20,10 +20,10 @@
             // Add variable
             $this->administro->variables['events'] = $this->eventDisplay();
             // Add forms
-            array_push($this->administro->forms, 'addevent');
+            array_push($this->administro->forms, 'addevent', 'deleteevent');
         }
 
-        public function eventDisplay($hideOld = true) {
+        public function eventDisplay($hideOld = true, $admin = false) {
             $this->loadEvents();
 
             uasort($this->events, function($p1, $p2) {
@@ -36,13 +36,23 @@
 
             $html = '';
 
+            if($admin) {
+                $deleteNonce = $this->administro->generateNonce('deleteevent');
+            }
+
             foreach($this->events as $id => $event) {
                 $date = new DateTime($event['date']);
                 if($hideOld && new DateTime() > $date) continue;
                 $month = $date->format('F');
                 $day = $date->format('j');
+                $year = $date->format('Y');
                 $name = $event['name'];
                 $link = false;
+                $delLink = '';
+                if($admin) {
+                    $delLink = ' <a href="' . $this->administro->baseDir . 'form/deleteevent?nonce=' . $deleteNonce;
+                    $delLink .= '&event=' . $id . '"><i class="fa fa-times"></i></a>';
+                }
                 if($event['file'] !== false) {
                     $link = $this->administro->baseDir . 'eventfile/' . $event['file'];
                 } else if($event['link'] !== false) {
@@ -50,9 +60,10 @@
                 }
                 if($link !== false) {
                     $html .= '<div class="event"><a href="' . $link . '"><span class="date">'
-                        . $month . ' ' . $day . ': </span>' . $name . '</a></div>';
+                        . $month . ' ' . $day . ': </span>' . $name . '</a>' . $delLink . '</div>';
                 } else {
-                    $html .= '<div class="event"><span class="date">' . $month . ' ' . $day . ': </span>' . $name . '</div>';
+                    $html .= '<div class="event"><span class="date">' . $month . ' ' . $day . ', ' . $year . ': </span>' . $name . $delLink;
+                    $html .= '</div>';
                 }
             }
 
@@ -66,6 +77,19 @@
             }
             // Load events
             $this->events = Yaml::parse(file_get_contents($this->dataFile));
+        }
+
+        public function onCleanData() {
+            // Load events
+            $this->loadEvents();
+            // Check for old events
+            foreach($this->events as $id => $event) {
+                if((new DateTime($event['date']))->modify('+1 day') < new DateTime()) {
+                    unset($this->events[$id]);
+                }
+            }
+            // Save new events
+            file_put_contents($this->dataFile, Yaml::dump($this->events));
         }
 
     }
@@ -109,6 +133,23 @@
                 $administro->redirect('admin/events', 'good/Added event!');
             } else {
                 $administro->redirect('admin/home', 'bad/Invalid permission!');
+            }
+        } else {
+            $administro->redirect('admin/events', 'bad/Invalid parameters!');
+        }
+    }
+
+    function deleteeventform($administro) {
+        $params = $administro->verifyParameters('deleteevent', array('event'), true, $_GET);
+        if($params !== false) {
+            if($administro->hasPermission('admin.event')) {
+                $plugin = $administro->plugins['Events'];
+                $plugin->loadEvents();
+                unset($plugin->events[$params['event']]);
+                file_put_contents($plugin->dataFile, Yaml::dump($plugin->events));
+                $administro->redirect('admin/events', 'good/Deleted event!');
+            } else {
+                $administro->redirect('admin/events', 'bad/Invalid permission!');
             }
         } else {
             $administro->redirect('admin/events', 'bad/Invalid parameters!');
